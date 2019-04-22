@@ -3131,25 +3131,25 @@
 			buildActionMask = 2147483647;
 			files = (
 				27F6F51D1BAA0482003FD798 /* c4Test.cc in Sources */,
-				27C77302216FCF5400D5FB44 /* c4PredictiveQueryTest+CoreML.mm in Sources */,
 				274D040F1BA75E5000FF7C35 /* c4DatabaseTest.cc in Sources */,
 				275BF3811F61CD9D0051374A /* c4DatabaseInternalTest.cc in Sources */,
 				27E0CA9E1DBEAA130089A9C0 /* c4DocumentTest.cc in Sources */,
 				272250511D78F07E0006D5A5 /* c4BlobStoreTest.cc in Sources */,
-				2700BB5B217005A900797537 /* CoreMLPredictiveModel.mm in Sources */,
 				2769438F1DD0ED3F00DB2555 /* c4ObserverTest.cc in Sources */,
 				27416E2A1E0494DF00F10F65 /* c4QueryTest.cc in Sources */,
 				2783DF991D27436700F84E6E /* c4ThreadingTest.cc in Sources */,
 				272850E91E9D484A009CA22F /* ReplicatorAPITest.cc in Sources */,
 				2797BCB21C10F71700E5C991 /* c4AllDocsPerformanceTest.cc in Sources */,
+				27C77302216FCF5400D5FB44 /* c4PredictiveQueryTest+CoreML.mm in Sources */,
 				270515611D91C2AE00D62D05 /* c4PerfTest.cc in Sources */,
 				270AB2A02072B1EA009A4596 /* CivetWebSocket.cc in Sources */,
 				277FEE5821ED10FA00B60E3C /* ReplicatorSGTest.cc in Sources */,
 				276E02111EA9717200FEFE8A /* RESTListenerTest.cc in Sources */,
+				27B649202065AD2B00FC12F7 /* SyncListenerTest.cc in Sources */,
 				276E021B1EA983EE00FEFE8A /* Response.cc in Sources */,
+				2700BB5B217005A900797537 /* CoreMLPredictiveModel.mm in Sources */,
 				2753AF7D1EBD1BE300C12E98 /* Logging_Stub.cc in Sources */,
 				273E9F771C516145003115A6 /* c4.c in Sources */,
-				27B649202065AD2B00FC12F7 /* SyncListenerTest.cc in Sources */,
 				274D040B1BA75E1C00FF7C35 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

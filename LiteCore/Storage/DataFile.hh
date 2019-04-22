@@ -55,6 +55,12 @@ namespace litecore {
             virtual alloc_slice blobAccessor(const fleece::impl::Dict*) const =0;
         };
 
+        class PreTransactionObserver {
+        public:
+            virtual void preTransaction() =0;
+            virtual ~PreTransactionObserver() {}
+        };
+
         struct Options {
             KeyStore::Capabilities keyStores;
             bool                create         :1;      ///< Should the db be created if it doesn't exist?
@@ -92,6 +98,9 @@ namespace litecore {
 
 
         void forOtherDataFiles(function_ref<void(DataFile*)> fn);
+
+        void addPreTransactionObserver(PreTransactionObserver*);
+        void removePreTransactionObserver(PreTransactionObserver*);
 
         /** Private API to run a raw (e.g. SQL) query, for diagnostic purposes only */
         virtual fleece::alloc_slice rawQuery(const std::string &query) =0;
@@ -235,6 +244,7 @@ namespace litecore {
         std::unordered_map<std::string, std::unique_ptr<KeyStore>> _keyStores;// Opened KeyStores
         Retained<fleece::impl::PersistentSharedKeys> _documentKeys;
         bool                    _inTransaction {false};         // Am I in a Transaction?
+        std::vector<PreTransactionObserver*> _preTransactionObservers;
     };
 
 

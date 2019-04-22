@@ -51,7 +51,8 @@ namespace litecore {
         virtual std::string explain() =0;
 
         struct Options {
-            alloc_slice paramBindings;
+            alloc_slice paramBindings;      // Bindings as an encoded Fleece Dict
+            bool oneShot = false;           // Less memory/latency, but disables seek & refresh
         };
 
         virtual QueryEnumerator* createEnumerator(const Options* =nullptr) =0;

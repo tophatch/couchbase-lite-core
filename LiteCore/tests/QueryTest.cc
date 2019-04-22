@@ -1379,7 +1379,8 @@ TEST_CASE_METHOD(QueryTest, "Query expiration", "[Query]") {
         Retained<Query> query{ store->compileQuery(json5(
             "{WHAT: ['._id'], WHERE: ['<=', ['._expiration'], ['$NOW']], ORDER_BY: [['._expiration']]}")) };
 
-        Query::Options options { alloc_slice(format("{\"NOW\": %lld}", (long long)now)) };
+        Query::Options options;
+        options.paramBindings = alloc_slice(format("{\"NOW\": %lld}", (long long)now));
         
         unique_ptr<QueryEnumerator> e(query->createEnumerator(&options));
         CHECK(e->next());

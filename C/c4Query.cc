@@ -37,7 +37,7 @@ using namespace fleece::impl;
 
 
 CBL_CORE_API const C4QueryOptions kC4DefaultQueryOptions = {
-    true
+    true, false
 };
 
 
@@ -88,7 +88,7 @@ struct C4QueryEnumeratorImpl : public C4QueryEnumerator, fleece::InstanceCounted
         return true;
     }
 
-    void seek(uint64_t rowIndex) {
+    void seek(int64_t rowIndex) {
         enumerator().seek(rowIndex);
         if (rowIndex >= 0)
             populatePublicFields();
@@ -171,8 +171,9 @@ C4QueryEnumerator* c4query_run(C4Query *query,
                                C4Error *outError) noexcept
 {
     return tryCatch<C4QueryEnumerator*>(outError, [&]{
-        Query::Options options;
+        Query::Options options = {};
         options.paramBindings = encodedParameters;
+        options.oneShot = (c4options ? c4options : &kC4DefaultQueryOptions)->oneShot;
         return new C4QueryEnumeratorImpl(query, &options);
     });
 }
