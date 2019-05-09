@@ -26,6 +26,7 @@
 #include "SQLiteDataFile.hh"
 #include "SQLiteKeyStore.hh"
 #include "SQLite_Internal.hh"
+#include "BothKeyStore.hh"
 #include "Record.hh"
 #include "UnicodeCollator.hh"
 #include "Error.hh"
@@ -86,6 +87,9 @@ namespace litecore {
     // multiple threads from trying to start transactions at once, but another process might
     // open the database and grab the write lock.
     static const unsigned kBusyTimeoutSecs = 10;
+
+    // Name of the KeyStore for deleted documents
+    static const string kDeletedKeyStoreName = "deleted";
 
     LogDomain SQL("SQL", LogLevel::Warning);
 
@@ -198,7 +202,7 @@ namespace litecore {
                       "BEGIN; "
                       "CREATE TABLE IF NOT EXISTS "      // Table of metadata about KeyStores
                       "  kvmeta (name TEXT PRIMARY KEY, lastSeq INTEGER DEFAULT 0, purgeCnt INTEGER DEFAULT 0) WITHOUT ROWID; "
-                      "PRAGMA user_version=302; "
+                      "PRAGMA user_version=400; "
                       "END;"
                       );
                 Assert(intQuery("PRAGMA auto_vacuum") == 2, "Incremental vacuum was not enabled!");
@@ -229,6 +233,22 @@ namespace litecore {
                     }
                 }
             }
+
+            if (_schemaVersion < SchemaVersion::WithDeletedTable) {
+                // Migrate deleted docs to separate table:
+                if (!options().upgradeable)
+                    error::_throw(error::CantUpgradeDatabase);
+                logInfo("SCHEMA UPGRADE: Migrating deleted docs to 'dead' KeyStore");
+                (void)defaultKeyStore();    // create the "kv_deleted" table
+                _exec(format("BEGIN;"
+                             "INSERT INTO kv_%s SELECT * FROM kv_%s WHERE (flags&1)!=0;"
+                             "DELETE FROM kv_%s WHERE (flags&1)!=0;"
+                             "PRAGMA user_version=400;"
+                             "END",
+                             kDeletedKeyStoreName.c_str(), kDefaultKeyStoreName.c_str(),
+                             kDefaultKeyStoreName.c_str()));
+                _schemaVersion = SchemaVersion::WithDeletedTable;
+            }
         });
 
         _exec(format("PRAGMA cache_size=%d; "            // Memory cache
@@ -246,14 +266,9 @@ namespace litecore {
 #endif
 
         // Configure number of extra threads to be used by SQLite:
-        int maxThreads = 0;
-#if TARGET_OS_OSX
-        maxThreads = 2;
-        // TODO: Configure for other platforms
-#endif
         auto sqlite = _sqlDb->getHandle();
-        if (maxThreads > 0)
-            sqlite3_limit(sqlite, SQLITE_LIMIT_WORKER_THREADS, maxThreads);
+        if (thread::hardware_concurrency() > 2)
+            sqlite3_limit(sqlite, SQLITE_LIMIT_WORKER_THREADS, 2);
 
         // Register collators, custom functions, and the FTS tokenizer:
         RegisterSQLiteUnicodeCollations(sqlite, _collationContexts);
@@ -449,7 +464,14 @@ namespace litecore {
 
 
     KeyStore* SQLiteDataFile::newKeyStore(const string &name, KeyStore::Capabilities options) {
-        return new SQLiteKeyStore(*this, name, options);
+        Assert(name != kDeletedKeyStoreName); // can't access this store directly
+        auto keyStore = new SQLiteKeyStore(*this, name, options);
+        if (name == kDefaultKeyStoreName) {
+            // Wrap the default store in a BothKeyStore that manages it and the deleted store
+            return new BothKeyStore(keyStore, new SQLiteKeyStore(*this, kDeletedKeyStoreName, options));
+        } else {
+            return keyStore;
+        }
     }
 
 #if ENABLE_DELETE_KEY_STORES
@@ -465,11 +487,6 @@ namespace litecore {
 
 
     void SQLiteDataFile::_endTransaction(Transaction *t, bool commit) {
-        // Notify key-stores so they can save state:
-        forOpenKeyStores([commit](KeyStore &ks) {
-            ((SQLiteKeyStore&)ks).transactionWillEnd(commit);
-        });
-
         exec(commit ? "COMMIT" : "ROLLBACK");
     }
 
