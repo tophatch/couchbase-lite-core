@@ -45,7 +45,7 @@
 
 extern "C" {
     #include "sqlite3_unicodesn_tokenizer.h"
-    
+
 #ifdef COUCHBASE_ENTERPRISE
     // These definitions were removed from the public SQLite header
     // in 3.32.0, and Xcode doesn't like to alter header search paths
@@ -155,7 +155,7 @@ namespace litecore {
         Assert(sqlite3_libversion_number() >= 300900, "LiteCore requires SQLite 3.9+");
         sqlite3_config(SQLITE_CONFIG_LOG, sqlite3_log_callback, NULL);
 #if defined(_MSC_VER) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-        setSqliteTempDirectory();
+        //setSqliteTempDirectory();
 #endif
     }
 
@@ -288,7 +288,7 @@ namespace litecore {
         _setLastSeqStmt.reset();
         _getPurgeCntStmt.reset();
         _setPurgeCntStmt.reset();
-        
+
         int sqlFlags = options().writeable ? SQLite::OPEN_READWRITE : SQLite::OPEN_READONLY;
         if (options().create)
             sqlFlags |= SQLite::OPEN_CREATE;
@@ -437,7 +437,7 @@ namespace litecore {
                 logInfo("Encrypting DataFile");
             }
         }
-        
+
         if (newKey.size != kEncryptionKeySize[alg])
             error::_throw(error::InvalidParameter);
         int rekeyResult = 0;
@@ -446,7 +446,7 @@ namespace litecore {
         } else {
             rekeyResult = sqlite3_rekey_v2(_sqlDb->getHandle(), nullptr, newKey.buf, (int)newKey.size);
         }
-        
+
         if(rekeyResult != SQLITE_OK) {
             error::_throw(litecore::error::SQLite, rekeyResult);
         }
@@ -581,7 +581,7 @@ namespace litecore {
             return !existed;
     }
 
-    
+
     sequence_t SQLiteDataFile::lastSequence(const string& keyStoreName) const {
         sequence_t seq = 0;
         compile(_getLastSeqStmt, "SELECT lastSeq FROM kvmeta WHERE name=?");
